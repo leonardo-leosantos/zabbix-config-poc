@@ -20,7 +20,8 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
   zabbix-server:
     container_name: zabbix-server
-    image: zabbix/zabbix-server-pgsql:latest
+    build: ./docker/zabbix-server-odbc
+    image: zabbix-server-odbc:local
     networks:
       - zabbix-network
     links:
