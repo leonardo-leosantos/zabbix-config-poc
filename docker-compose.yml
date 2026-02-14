@@ -1,0 +1,73 @@
+networks:
+  zabbix-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+
+services:
+  postgres_zabbix:
+    container_name: postgres_zabbix
+    image: postgres:15
+    networks:
+      - zabbix-network
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+  zabbix-server:
+    container_name: zabbix-server
+    image: zabbix/zabbix-server-pgsql:latest
+    networks:
+      - zabbix-network
+    links:
+      - postgres_zabbix
+    restart: always
+    ports:
+      - "10051:10051"
+    volumes:
+      - ./zabbix/alertscripts:/usr/lib/zabbix/alertscripts
+    environment:
+      - DB_SERVER_HOST=postgres_zabbix
+      - DB_SERVER_PORT=5432
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+    depends_on:
+      - postgres_zabbix
+  zabbix-web:
+    container_name: zabbix-web-frontend
+    image: zabbix/zabbix-web-apache-pgsql:latest
+    networks:
+      - zabbix-network
+    links:
+      - postgres_zabbix
+    restart: always
+    ports:
+      - "80:8080"   # Apache na imagem escuta em 8080; 443:8443 para HTTPS
+      - "443:8443"
+    environment:
+      - DB_SERVER_HOST=postgres_zabbix
+      - DB_SERVER_PORT=5432
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_SERVER_PORT=10051
+    depends_on:
+      - postgres_zabbix
+  zabbix-agent:
+    container_name: zabbix-agent
+    image: zabbix/zabbix-agent2:latest
+    networks:
+      zabbix-network:
+        ipv4_address: 172.28.0.10
+    restart: always
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_HOSTNAME=Zabbix server
+    depends_on:
+      - zabbix-server
