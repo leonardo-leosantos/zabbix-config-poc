@@ -12,6 +12,7 @@ Este projeto sobe uma stack de monitoria usando Docker Compose para coletar, arm
 - `prometheus`: servidor de metricas no modelo pull; raspa endpoints dos exporters e disponibiliza consultas.
 - `node-exporter`: exporter de metricas de sistema (CPU, memoria, disco, rede) do ambiente host.
 - `cadvisor`: exporter de metricas de containers (uso de CPU/memoria, filesystem, rede e runtime Docker).
+- `apache-exporter`: exporter de metricas do Apache (requisicoes, workers, bytes, uptime) via mod_status do zabbix-web.
 
 ## Como os componentes se encaixam
 
